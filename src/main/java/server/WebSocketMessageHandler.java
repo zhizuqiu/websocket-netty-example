@@ -25,6 +25,11 @@ import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -55,8 +60,11 @@ public class WebSocketMessageHandler extends SimpleChannelInboundHandler<FullHtt
         }
 
         // Send the index page
-        if ("/".equals(req.uri()) || "/index.html".equals(req.uri())) {
+        if (req.uri().startsWith("/putMessage")) {
 
+            Map<String, String> param = RequestParser.getParam(req);
+            System.out.printf(param.toString());
+            
             logger.info("{} received {}", ctx.channel(), "1111");
             ChannelGroups.broadcast(new TextWebSocketFrame("1111"));
 
