@@ -13,17 +13,21 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package server;
+package server.tools;
 
+import com.google.gson.Gson;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.group.ChannelMatcher;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Locale;
+import server.bean.WebSocketMessage;
+import server.bean.ChannelGroups;
+import server.bean.ChannelMaps;
+import server.bean.ChannelMatcherImpl;
 
 /**
  * Echoes uppercase content of text frames.
@@ -37,10 +41,24 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
         // ping and pong frames already handled
 
         if (frame instanceof TextWebSocketFrame) {
+
             // Send the uppercase string back.
             String request = ((TextWebSocketFrame) frame).text();
             logger.info("{} received {}", ctx.channel(), request);
-            ChannelGroups.broadcast(new TextWebSocketFrame(request.toUpperCase(Locale.US)));
+
+            WebSocketMessage webSocketMessage = new Gson().fromJson(request, WebSocketMessage.class);
+
+            Channel incoming = ctx.channel();
+            if ("login".equals(webSocketMessage.getType())) {
+                String group = webSocketMessage.getGroup();
+
+                ChannelMaps.put(incoming.id().asLongText(), group);
+                ChannelGroups.add(incoming);
+            } else {
+                String group = ChannelMaps.get(incoming.id().asLongText());
+                ChannelMatcher channelMatcher = new ChannelMatcherImpl(group);
+                ChannelGroups.broadcast(new TextWebSocketFrame(request),channelMatcher);
+            }
         } else {
             String message = "unsupported frame type: " + frame.getClass().getName();
             throw new UnsupportedOperationException(message);
@@ -54,8 +72,6 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         Channel incoming = ctx.channel();
-        ChannelGroups.add(incoming);
-
         System.out.println("Client:" + incoming.remoteAddress() + "加入" + "current size:" + ChannelGroups.size());
     }
 
@@ -77,6 +93,10 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+
+        Channel incoming = ctx.channel();
+        ChannelMaps.remove(incoming.id().asLongText());
+
         ctx.close();
         //Channel incoming = ctx.channel();
         //ChannelGroups.broadcast(new TextWebSocketFrame("[SERVER] - " + incoming.remoteAddress() + " 离开"));

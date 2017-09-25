@@ -17,7 +17,7 @@
             ta.value = "Web Socket opened!";
             send(JSON.stringify({
                 type:"login",
-                group:"admin"
+                group:"admin1"
             }));
         };
         socket.onclose = function (event) {
@@ -41,7 +41,7 @@
 </script>
 <form onsubmit="return false;">
     <input type="text" name="message" value="Hello, World!"/>
-    <input type="button" value="Send Web Socket Data" onclick="send(JSON.stringify({type:'mess',group:'admin',message:this.form.message.value}))"/>
+    <input type="button" value="Send Web Socket Data" onclick="send(JSON.stringify({type:'mess',group:'admin1',message:this.form.message.value}))"/>
     <h3>Output</h3>
     <textarea id="responseText" style="width:500px;height:300px;"></textarea>
 </form>

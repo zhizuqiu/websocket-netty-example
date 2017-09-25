@@ -13,21 +13,19 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package server;
+package server.tools;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import server.bean.ChannelGroups;
+import server.handler.RequestParser;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpMethod.GET;
@@ -77,7 +75,10 @@ public class WebSocketMessageHandler extends SimpleChannelInboundHandler<FullHtt
             sendHttpResponse(ctx, req, res);
             //ctx.disconnect();
 
-        } else {
+        } else if (req.uri().equals("/websocket")){
+            Map<String, String> param = RequestParser.getParam(req);
+            System.out.printf(param.toString());
+        }else {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND));
         }
 

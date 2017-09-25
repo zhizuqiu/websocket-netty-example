@@ -1,4 +1,4 @@
-package server;
+package server.bean;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
