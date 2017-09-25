@@ -1,4 +1,4 @@
-package server.handler;
+package server.tools;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
