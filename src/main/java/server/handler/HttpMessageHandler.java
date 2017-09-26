@@ -17,7 +17,10 @@ package server.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.CharsetUtil;
@@ -36,12 +39,12 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 /**
  * Outputs index page content.
  */
-public class WebSocketMessageHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class HttpMessageHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
 
-    private static final Logger logger = LoggerFactory.getLogger(WebSocketMessageHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpMessageHandler.class);
 
-    public WebSocketMessageHandler() {
+    public HttpMessageHandler() {
     }
 
     @Override

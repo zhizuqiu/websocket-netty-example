@@ -24,10 +24,11 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import server.bean.WebSocketMessage;
 import server.bean.ChannelGroups;
 import server.bean.ChannelMaps;
 import server.bean.ChannelMatcherImpl;
+import server.bean.WebSocketMessage;
+import server.tools.ChannelOrganize;
 
 /**
  * Echoes uppercase content of text frames.
@@ -37,8 +38,13 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     private static final Logger logger = LoggerFactory.getLogger(WebSocketFrameHandler.class);
 
     @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        super.userEventTriggered(ctx, evt);
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception {
-        // ping and pong frames already handled
+        // ping and pong frames already handled ，在WebSocketServerProtocolHandler中
 
         if (frame instanceof TextWebSocketFrame) {
 
@@ -52,12 +58,15 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
             if ("login".equals(webSocketMessage.getType())) {
                 String group = webSocketMessage.getGroup();
 
-                ChannelMaps.put(incoming.id().asLongText(), group);
+                ChannelMaps.put(incoming, group);
                 ChannelGroups.add(incoming);
+                ChannelOrganize.clean();
+                System.out.println("Client:" + incoming.remoteAddress() + "加入" + "current size:" + ChannelGroups.size());
+                System.out.println("ChannelMaps.size=" + ChannelMaps.size());
             } else {
-                String group = ChannelMaps.get(incoming.id().asLongText());
+                String group = ChannelMaps.get(incoming);
                 ChannelMatcher channelMatcher = new ChannelMatcherImpl(group);
-                ChannelGroups.broadcast(new TextWebSocketFrame(request),channelMatcher);
+                ChannelGroups.broadcast(new TextWebSocketFrame(request), channelMatcher);
             }
         } else {
             String message = "unsupported frame type: " + frame.getClass().getName();
@@ -68,46 +77,27 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     /*
     打开websockert时：
     handlerAdded->channelActive
-    */
-    @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        Channel incoming = ctx.channel();
-        System.out.println("Client:" + incoming.remoteAddress() + "加入" + "current size:" + ChannelGroups.size());
-    }
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        Channel incoming = ctx.channel();
-        //ChannelGroups.broadcast(new TextWebSocketFrame("[SERVER] - " + incoming.remoteAddress() + " 加入"));
-    }
-
-
-    /*
     关闭websockert时：
     channelInactive->handlerRemoved
      */
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("Client:" + ctx.channel().remoteAddress() + "离开" + "current size:" + ChannelGroups.size());
-    }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 
         Channel incoming = ctx.channel();
-        ChannelMaps.remove(incoming.id().asLongText());
-
+        ChannelMaps.remove(incoming);
+        ChannelOrganize.clean();
+        System.out.println("Client:" + ctx.channel().remoteAddress() + "离开" + "current size:" + ChannelGroups.size());
+        System.out.println("ChannelMaps.size=" + ChannelMaps.size());
         ctx.close();
-        //Channel incoming = ctx.channel();
-        //ChannelGroups.broadcast(new TextWebSocketFrame("[SERVER] - " + incoming.remoteAddress() + " 离开"));
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
+        logger.error(cause.getMessage());
         ChannelGroups.discard(ctx.channel());
+        ChannelOrganize.clean();
         Channel incoming = ctx.channel();
         System.out.println("Client:" + incoming.remoteAddress() + "异常" + "current size:" + ChannelGroups.size());
-        // 当出现异常就关闭连接
     }
 }

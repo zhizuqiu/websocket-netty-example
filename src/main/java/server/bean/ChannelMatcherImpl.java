@@ -12,6 +12,6 @@ public class ChannelMatcherImpl implements ChannelMatcher {
 
     @Override
     public boolean matches(Channel channel) {
-        return this.group.equals(ChannelMaps.get(channel.id().asLongText()));
+        return this.group.equals(ChannelMaps.get(channel));
     }
 }

@@ -23,8 +23,8 @@ import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler;
 import io.netty.handler.ssl.SslContext;
+import server.handler.HttpMessageHandler;
 import server.handler.WebSocketFrameHandler;
-import server.handler.WebSocketMessageHandler;
 
 /**
  */
@@ -48,7 +48,7 @@ public class WebSocketServerInitializer extends ChannelInitializer<SocketChannel
         pipeline.addLast(new HttpObjectAggregator(65536));
         pipeline.addLast(new WebSocketServerCompressionHandler());
         pipeline.addLast(new WebSocketServerProtocolHandler(WEBSOCKET_PATH, null, true));
-        pipeline.addLast(new WebSocketMessageHandler());
+        pipeline.addLast(new HttpMessageHandler());
         pipeline.addLast(new WebSocketFrameHandler());
     }
 }
