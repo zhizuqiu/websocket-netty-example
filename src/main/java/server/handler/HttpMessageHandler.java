@@ -1,18 +1,3 @@
-/*
- * Copyright 2012 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
 package server.handler;
 
 import com.google.gson.Gson;
@@ -32,17 +17,13 @@ import server.bean.ChannelMatcherImpl;
 import server.bean.WebSocketMessage;
 import server.tools.CheckTools;
 import server.tools.RequestParser;
-import server.tools.WebSocketServerMessageCreater;
 
-import java.util.Map;
-
-import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpMethod.POST;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
- * Outputs index page content.
+ * Outputs Http message.
  */
 public class HttpMessageHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
@@ -60,13 +41,12 @@ public class HttpMessageHandler extends SimpleChannelInboundHandler<FullHttpRequ
             return;
         }
 
-        // Allow only GET methods.
+        // Allow only POST methods.
         if (req.method() != POST) {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, FORBIDDEN));
             return;
         }
 
-        // Send the index page
         if (req.uri().startsWith("/putMessage")) {
 
             String jsonParam = RequestParser.getJsonParam(req);
@@ -84,8 +64,7 @@ public class HttpMessageHandler extends SimpleChannelInboundHandler<FullHttpRequ
                 result = "success";
             }
 
-            ByteBuf content = WebSocketServerMessageCreater.getContent(result);
-            FullHttpResponse res = getOkFullHttpResponse(content);
+            FullHttpResponse res = getOkFullHttpResponse(result);
             sendHttpResponse(ctx, req, res);
 
         } else {
@@ -99,7 +78,8 @@ public class HttpMessageHandler extends SimpleChannelInboundHandler<FullHttpRequ
         ctx.close();
     }
 
-    private static FullHttpResponse getOkFullHttpResponse(ByteBuf content) {
+    private static FullHttpResponse getOkFullHttpResponse(String text) {
+        ByteBuf content = Unpooled.copiedBuffer(text, CharsetUtil.US_ASCII);
         FullHttpResponse res = new DefaultFullHttpResponse(HTTP_1_1, OK, content);
         res.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
         HttpUtil.setContentLength(res, content.readableBytes());
@@ -107,6 +87,7 @@ public class HttpMessageHandler extends SimpleChannelInboundHandler<FullHttpRequ
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
+
         // Generate an error page if response getStatus code is not OK (200).
         if (res.status().code() != 200) {
             ByteBuf buf = Unpooled.copiedBuffer(res.status().toString(), CharsetUtil.UTF_8);
