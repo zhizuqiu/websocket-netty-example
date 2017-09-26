@@ -52,12 +52,10 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                 ChannelMaps.put(incoming, group);
                 ChannelGroups.add(incoming);
                 ChannelOrganize.clean();
-                System.out.println("Client:" + incoming.remoteAddress() + "加入" + "current size:" + ChannelGroups.size());
+                System.out.println("Client:" + incoming.remoteAddress() + " added" + ",current size:" + ChannelGroups.size());
                 System.out.println("ChannelMaps.size=" + ChannelMaps.size());
             } else {
-                String group = ChannelMaps.get(incoming);
-                ChannelMatcher channelMatcher = new ChannelMatcherImpl(group);
-                ChannelGroups.broadcast(new TextWebSocketFrame(webSocketMessage.getMessage()), channelMatcher);
+                ChannelGroups.broadcast(new TextWebSocketFrame(webSocketMessage.getMessage()), new ChannelMatcherImpl(ChannelMaps.get(incoming)));
             }
         } else {
             String message = "unsupported frame type: " + frame.getClass().getName();
@@ -78,7 +76,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
         Channel incoming = ctx.channel();
         ChannelMaps.remove(incoming);
         ChannelOrganize.clean();
-        System.out.println("Client:" + ctx.channel().remoteAddress() + "离开" + "current size:" + ChannelGroups.size());
+        System.out.println("Client:" + ctx.channel().remoteAddress() + " leave" + ",current size:" + ChannelGroups.size());
         System.out.println("ChannelMaps.size=" + ChannelMaps.size());
         ctx.close();
     }
@@ -89,6 +87,6 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
         ChannelGroups.discard(ctx.channel());
         ChannelOrganize.clean();
         Channel incoming = ctx.channel();
-        System.out.println("Client:" + incoming.remoteAddress() + "异常" + "current size:" + ChannelGroups.size());
+        System.out.println("Client:" + incoming.remoteAddress() + " occur exception" + ",current size:" + ChannelGroups.size());
     }
 }

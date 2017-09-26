@@ -14,7 +14,7 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 public final class WebSocketServer {
 
     static final boolean SSL = System.getProperty("ssl") != null;
-    static final int PORT = Integer.parseInt(System.getProperty("port", SSL? "8443" : "8082"));
+    static final int PORT = Integer.parseInt(System.getProperty("port", SSL ? "8443" : "8082"));
 
     public static void main(String[] args) throws Exception {
         // Configure SSL.
@@ -26,19 +26,23 @@ public final class WebSocketServer {
             sslCtx = null;
         }
 
-        EventLoopGroup bossGroup = new NioEventLoopGroup(2);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(4);
+        int bossThreadCount = 2;
+        int workThreadCount = 4;
+
+        EventLoopGroup bossGroup = new NioEventLoopGroup(bossThreadCount);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(workThreadCount);
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
-             .handler(new LoggingHandler(LogLevel.INFO))
-             .childHandler(new WebSocketServerInitializer(sslCtx));
+                    .channel(NioServerSocketChannel.class)
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new WebSocketServerInitializer(sslCtx));
 
             Channel ch = b.bind(PORT).sync().channel();
 
-            System.out.println("Open your web browser and navigate to " +
-                    (SSL? "https" : "http") + "://127.0.0.1:" + PORT + '/');
+            System.out.println("Open your web browser and navigate to " + (SSL ? "https" : "http") + "://127.0.0.1:" + PORT + '/');
+            System.out.println("bossThreadCount:" + bossThreadCount);
+            System.out.println("workThreadCount:" + workThreadCount);
 
             ch.closeFuture().sync();
         } finally {
