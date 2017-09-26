@@ -1,11 +1,13 @@
 package server.tools;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
+import io.netty.util.CharsetUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -42,5 +44,10 @@ public class RequestParser {
             throw new IOException("MethodNotSupportedException");
         }
         return requestParams;
+    }
+
+    public static String getJsonParam(FullHttpRequest req) {
+        ByteBuf jsonBuf = req.content();
+        return jsonBuf.toString(CharsetUtil.UTF_8);
     }
 }

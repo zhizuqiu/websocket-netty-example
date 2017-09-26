@@ -29,6 +29,7 @@ import server.bean.ChannelMaps;
 import server.bean.ChannelMatcherImpl;
 import server.bean.WebSocketMessage;
 import server.tools.ChannelOrganize;
+import server.tools.CheckTools;
 
 /**
  * Echoes uppercase content of text frames.
@@ -54,6 +55,11 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
 
             WebSocketMessage webSocketMessage = new Gson().fromJson(request, WebSocketMessage.class);
 
+            if (!CheckTools.checkParam(webSocketMessage.getType(), webSocketMessage.getGroup())) {
+                ctx.writeAndFlush("param error");
+                return;
+            }
+
             Channel incoming = ctx.channel();
             if ("login".equals(webSocketMessage.getType())) {
                 String group = webSocketMessage.getGroup();
@@ -66,7 +72,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
             } else {
                 String group = ChannelMaps.get(incoming);
                 ChannelMatcher channelMatcher = new ChannelMatcherImpl(group);
-                ChannelGroups.broadcast(new TextWebSocketFrame(request), channelMatcher);
+                ChannelGroups.broadcast(new TextWebSocketFrame(webSocketMessage.getMessage()), channelMatcher);
             }
         } else {
             String message = "unsupported frame type: " + frame.getClass().getName();
